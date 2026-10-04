@@ -22,23 +22,13 @@ is_dark = "Dark" in mode_choice
 bg_color = t['bg_dark'] if is_dark else t['bg_light']
 text_color = "white" if is_dark else "#1e2a5a"
 
-# --- TITLE UPER ---
-# --- TITLE - FIXED NO BUG ---
 st.markdown(f"""
 <div style='text-align:center; margin-top:15px; margin-bottom:20px;'>
-    <h1 style='
-        font-family: "Poppins", Sans-serif;
-        font-weight: 900;
-        font-size: 50px;
-        color: {text_color};
-        margin:0;
-        text-shadow: 2px 2px 0px white;
-    '>
+    <h1 style='font-family: "Poppins", Sans-serif; font-weight: 900; font-size: 50px; color: {text_color}; margin:0; text-shadow: 2px 2px 0px white;'>
         🧮 Scientific Calculator 
     </h1>
 </div>
 """, unsafe_allow_html=True)
-
 
 st.markdown(f"<style>.stApp{{background:{bg_color} !important}} header,footer{{visibility:hidden}}</style>", unsafe_allow_html=True)
 
@@ -87,10 +77,25 @@ function nPr(n,r){{return factorial(n)/factorial(n-r);}}function nCr(n,r){{retur
 function safeEval(s){{try{{if(!s||s.trim()==='')return null;let t=s.replace(/π/g,'Math.PI').replace(/E/g,'Math.E').replace(/÷/g,'/').replace(/×/g,'*').replace(/−/g,'-').replace(/\\^/g,'**').replace(/mod/g,'%');t=t.replace(/(\\d+(\\.\\d+)?)P(\\d+)/g,'nPr($1,$3)');t=t.replace(/(\\d+(\\.\\d+)?)C(\\d+)/g,'nCr($1,$3)');t=t.replace(/(\\d+(\\.\\d+)?)%/g,'($1/100)');t=t.replace(/sqrt\\(/g,'Math.sqrt(');t=t.replace(/ln\\(/g,'Math.log(');t=t.replace(/log\\(/g,'Math.log10(');t=t.replace(/sin\\(/g,'__sin(');t=t.replace(/cos\\(/g,'__cos(');t=t.replace(/tan\\(/g,'__tan(');function __sin(x){{return isHyp?Math.sinh(toRad(x)):Math.sin(toRad(x));}}function __cos(x){{return isHyp?Math.cosh(toRad(x)):Math.cos(toRad(x));}}function __tan(x){{return isHyp?Math.tanh(toRad(x)):Math.tan(toRad(x));}}return Function('nPr','nCr','factorial','Math','__sin','__cos','__tan','return '+t)(nPr,nCr,factorial,Math,__sin,__cos,__tan);}}catch(e){{return null;}}}}
 function handleSci(f){{let curr=expr.trim();let val=safeEval(curr);if(val!=null&&curr!==''&&!isNaN(val)&&!/[+\\-×÷^%()P C]$/.test(curr)){{let res=val;if(f==='sin')res=isHyp?Math.sinh(toRad(val)):Math.sin(toRad(val));if(f==='cos')res=isHyp?Math.cosh(toRad(val)):Math.cos(toRad(val));if(f==='tan')res=isHyp?Math.tanh(toRad(val)):Math.tan(toRad(val));if(f==='ln')res=Math.log(val);if(f==='log')res=Math.log10(val);if(f==='sqrt')res=Math.sqrt(val);if(f==='cube')res=Math.pow(val,3);if(f==='inv')res=1/val;if(f==='fact')res=factorial(val);res=Number(Number(res).toFixed(10));document.getElementById('history').innerText=curr+' '+f+' =';expr=String(res);ans=res;document.getElementById('result').innerText=res;return;}}if(f==='sin'||f==='cos'||f==='tan'||f==='ln'||f==='log'||f==='sqrt'){{expr+=f+'(';update();}}else if(f==='cube'){{expr+='^3';update();}}else if(f==='inv'){{expr='1/('+curr+')';update();}}else if(f==='fact'){{let r=factorial(val||0);expr=String(r);update();}}}}
 function calculate(){{let r=safeEval(expr);if(r!=null&&!isNaN(r)){{ans=r;r=Number(Number(r).toFixed(10));expr=String(r);document.getElementById('result').innerText=r;document.getElementById('history').innerText='';}}else{{document.getElementById('result').innerText='Error';}}}}
+
+// === DIRECT KEYBOARD SUPPORT - NO BAR ===
+document.addEventListener('keydown', function(e) {{
+    if (e.key >= '0' && e.key <= '9') {{ insert(e.key); }}
+    if (e.key === '.') {{ insert('.'); }}
+    if (e.key === '+') {{ insert('+'); }}
+    if (e.key === '(' || e.key === ')') {{ insert(e.key); }}
+    if (e.key === '%') {{ insert('%'); }}
+    if (e.key === '/') {{ e.preventDefault(); insert('÷'); }}
+    if (e.key === '*') {{ e.preventDefault(); insert('×'); }}
+    if (e.key === '-') {{ insert('−'); }}
+    if (e.key === 'Enter' || e.key === '=') {{ e.preventDefault(); calculate(); }}
+    if (e.key === 'Backspace') {{ e.preventDefault(); back(); }}
+    if (e.key === 'Escape' || e.key.toLowerCase() === 'c') {{ clearAll(); }}
+}});
+
 </script></body></html>
 """
 
-# Center me dikhane ke liye columns
 col1, col2, col3 = st.columns([1,2,1])
 with col2:
     components.html(html_code, height=1100, scrolling=False)
