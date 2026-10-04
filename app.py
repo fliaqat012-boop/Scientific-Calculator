@@ -40,7 +40,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 
-st.markdown(f"<style>.stApp{{background:{bg_color}; transition:0.5s}} header,footer{{visibility:hidden}} [data-testid='stSidebar']{{background:{'#2a2a3a' if is_dark else '#ffffff'};}}</style>", unsafe_allow_html=True)
+st.markdown(f"<style>.stApp{{background:{bg_color} !important}} header,footer{{visibility:hidden}}</style>", unsafe_allow_html=True)
 
 # --- CALCULATOR HTML ---
 html_code = f"""
