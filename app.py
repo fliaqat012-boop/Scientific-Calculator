@@ -1,383 +1,96 @@
-import math
-import re
 import streamlit as st
+import streamlit.components.v1 as components
 
-# Page Configuration
-st.set_page_config(
-    page_title="Pro Scientific Calculator", page_icon="🧮", layout="centered"
-)
+st.set_page_config(page_title="Scientific Calculator", layout="wide")
 
-# Sidebar Settings for Theme and History
-with st.sidebar:
-  st.header("⚙️ Settings & Features")
-  theme = st.radio("Theme Selector", ["Dark Mode", "Light Mode"])
-  mode = st.radio("Calculator Mode", ["Standard", "Scientific"])
-  st.markdown("---")
-  st.header("📜 Calculation History")
+# --- SIDEBAR ME OPTIONS ---
+st.sidebar.title("⚙️ Settings")
 
-  if "history_log" not in st.session_state:
-    st.session_state.history_log = []
+THEMES = {
+    "Original Blue": {"body": "#a8bdff", "ear": "#8aa8ff", "border": "#6d8cff", "bg_light": "#e6ecff", "bg_dark": "#1a1d2e", "light": "#d6e6ff"},
+    "Barbie Pink": {"body": "#ffb6d9", "ear": "#ff8fab", "border": "#ff4d8f", "bg_light": "#ffe5ec", "bg_dark": "#2e1a24", "light": "#ffc8dd"},
+    "Lavender": {"body": "#cbb6ff", "ear": "#a48bff", "border": "#8a5cff", "bg_light": "#ede7ff", "bg_dark": "#211a2e", "light": "#e5d3ff"},
+    "Mint Green": {"body": "#b9f6ca", "ear": "#81e6a0", "border": "#4caf7a", "bg_light": "#e8f5e9", "bg_dark": "#1a2e20", "light": "#dcedc8"},
+}
 
-  if st.session_state.history_log:
-    for hist in reversed(st.session_state.history_log[-10:]):
-      st.text(hist)
-    if st.button("Clear History"):
-      st.session_state.history_log = []
-      st.rerun()
-  else:
-    st.info("No history yet.")
+color_choice = st.sidebar.selectbox("🎨 Color Theme:", list(THEMES.keys()))
+mode_choice = st.sidebar.radio("🌓 Mode:", ["Light Mode ☀️", "Dark Mode 🌙"])
 
-# Dynamic Theme Colors
-if theme == "Dark Mode":
-  bg_style = "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)"
-  screen_bg = "linear-gradient(145deg, #090d16, #111827)"
-  screen_border = "#334155"
-  text_color = "#f8fafc"
-  btn_bg = "linear-gradient(145deg, #1e293b, #0f172a)"
-  btn_color = "#e2e8f0"
-  btn_hover_border = "#38bdf8"
-else:
-  bg_style = "linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%)"
-  screen_bg = "linear-gradient(145deg, #ffffff, #f8fafc)"
-  screen_border = "#94a3b8"
-  text_color = "#0f172a"
-  btn_bg = "linear-gradient(145deg, #ffffff, #f1f5f9)"
-  btn_color = "#1e293b"
-  btn_hover_border = "#0284c7"
+t = THEMES[color_choice]
+is_dark = "Dark" in mode_choice
 
-# Compact Screen CSS
-st.markdown(
-    f"""
-    <style>
-    .stApp {{
-        background: {bg_style};
+bg_color = t['bg_dark'] if is_dark else t['bg_light']
+text_color = "white" if is_dark else "#1e2a5a"
+
+# --- TITLE UPER ---
+# --- TITLE - FIXED NO BUG ---
+st.markdown(f"""
+<div style='text-align:center; margin-top:15px; margin-bottom:20px;'>
+    <h1 style='
+        font-family: "Poppins", Sans-serif;
+        font-weight: 900;
+        font-size: 50px;
         color: {text_color};
-        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    }}
-    #MainMenu {{visibility: hidden;}}
-    footer {{visibility: hidden;}}
-    header {{visibility: hidden;}}
-
-    .app-header {{
-        text-align: center;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        color: #38bdf8;
-        font-size: 22px;
-        margin-bottom: 10px;
-        text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
-    }}
-
-    .calc-screen {{
-        background: {screen_bg};
-        border: 2px solid {screen_border};
-        border-radius: 12px;
-        padding: 10px 18px;
-        text-align: right;
-        margin-bottom: 15px;
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 6px 15px -3px rgba(0, 0, 0, 0.2);
-    }}
-    .history-text {{
-        color: #64748b;
-        font-size: 13px;
-        font-family: monospace;
-        min-height: 18px;
-        margin-bottom: 2px;
-    }}
-    .main-result {{
-        color: #38bdf8;
-        font-size: 30px;
-        font-weight: 700;
-        font-family: monospace;
-        text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
-    }}
-
-    .stButton>button {{
-        width: 100%;
-        height: 45px;
-        font-size: 16px;
-        font-weight: 600;
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: {btn_bg};
-        color: {btn_color};
-        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-        transition: all 0.2s ease-in-out;
-    }}
-    .stButton>button:hover {{
-        border-color: {btn_hover_border};
-        color: #38bdf8;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 12px rgba(56, 189, 248, 0.2);
-    }}
-    .stButton>button:active {{
-        transform: translateY(1px);
-    }}
-    </style>
-""",
-    unsafe_allow_html=True,
-)
-
-# Initialize Session State
-if "expression" not in st.session_state:
-  st.session_state.expression = ""
-if "last_expr" not in st.session_state:
-  st.session_state.last_expr = ""
-if "result" not in st.session_state:
-  st.session_state.result = "0"
-if "history_log" not in st.session_state:
-  st.session_state.history_log = []
+        margin:0;
+        text-shadow: 2px 2px 0px white;
+    '>
+        🧮 Scientific Calculator 
+    </h1>
+</div>
+""", unsafe_allow_html=True)
 
 
-def evaluate_calc():
-  try:
-    allowed_names = {
-        "sin": lambda x: math.sin(math.radians(x)),
-        "cos": lambda x: math.cos(math.radians(x)),
-        "tan": lambda x: math.tan(math.radians(x)),
-        "sqrt": math.sqrt,
-        "log": math.log10,
-        "ln": math.log,
-        "factorial": math.factorial,
-        "pi": math.pi,
-        "e": math.e,
-    }
+st.markdown(f"<style>.stApp{{background:{bg_color}; transition:0.5s}} header,footer{{visibility:hidden}} [data-testid='stSidebar']{{background:{'#2a2a3a' if is_dark else '#ffffff'};}}</style>", unsafe_allow_html=True)
 
-    raw_expr = st.session_state.expression
+# --- CALCULATOR HTML ---
+html_code = f"""
+<html><head><style>
+body{{margin:0;display:flex;justify-content:center;background:transparent;font-family:'Segoe UI',sans-serif}}
+.wrap{{position:relative;padding-top:35px}}
+.ears::before,.ears::after{{content:'';position:absolute;top:0;width:68px;height:60px;background:{t['ear']};border-radius:70% 70% 20% 20%;z-index:0;border:4px solid white}}
+.ears::before{{left:22px;transform:rotate(-12deg)}}.ears::after{{right:22px;transform:rotate(12deg)}}
+.calculator{{width:378px;background:{t['body']};border-radius:42px 42px 65px 65px;padding:20px 18px 24px 18px;position:relative;z-index:1;border:5px solid white;box-shadow:0 22px 45px rgba(0,0,0,.30)}}
+.display{{background:white;border:3.5px solid {t['border']};border-radius:20px;padding:14px 16px;min-height:75px;text-align:right;}}
+#history{{font-size:13px;color:#8a9cc5;min-height:18px;word-break:break-all}}#result{{font-size:42px;font-weight:800;color:#1e2a5a;line-height:1.1;word-break:break-all}}
+.grid{{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-top:15px}}
+button{{border:none;border-radius:18px;padding:14px 3px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.15);color:#3b4a8a}}
+button:active{{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.15)}}
+.mem{{background:#c9f0d8}}.func-y{{background:#fde9a0}}.func-b{{background:{t['light']}}}.light{{background:#e3f2fd}}.num{{background:#fff}}.op{{background:{t['border']};color:white}}.pink{{background:#ff8a9d;color:white}}.ac{{background:#ff7a8e;color:white}}.equals{{background:{t['border']};color:white}}
+.sep{{border-top:3px dotted white;margin:8px 0;grid-column:1 / -1}}
+</style></head><body>
+<div class="wrap"><div class="ears"></div><div class="calculator">
+<div class="display"><small style="float:left;background:{t['light']};padding:3px 10px;border-radius:12px;font-size:11px;font-weight:bold">DEG</small><div id="history"></div><div id="result">0</div></div>
+<div class="grid">
+<button class="mem" onclick="mem('MC')">MC</button><button class="mem" onclick="mem('MR')">MR</button><button class="mem" onclick="mem('M+')">M+</button><button class="mem" onclick="mem('M-')">M-</button><button class="mem" onclick="mem('MS')">MS</button>
+<button class="func-y" onclick="toggleDeg()">DEG</button><button class="func-y" onclick="toggleHyp()">hyp</button><button class="func-y">SHIFT</button><button class="func-b" onclick="insert('*10**')">EXP</button><button class="func-b" onclick="doRandom()">Ran#</button>
+<button class="func-b" onclick="handleSci('sin')">sin</button><button class="func-b" onclick="handleSci('cos')">cos</button><button class="func-b" onclick="handleSci('tan')">tan</button><button class="func-b" onclick="insert('π')">π</button><button class="func-b" onclick="insert('E')">e</button>
+<button class="func-b" onclick="handleSci('ln')">ln</button><button class="func-b" onclick="handleSci('log')">log</button><button class="func-b" onclick="handleSci('sqrt')">√</button><button class="func-b" onclick="insert('^')">xʸ</button><button class="func-b" onclick="handleSci('fact')">n!</button>
+<button class="func-b" onclick="handleSci('cube')">x³</button><button class="func-b" onclick="handleSci('inv')">1/x</button><button class="func-b" onclick="handleSci('abs')">|x|</button><button class="func-b" onclick="insert('P')">nPr</button><button class="func-b" onclick="insert('C')">nCr</button>
+<button class="light" onclick="insert('(')">(</button><button class="light" onclick="insert(')')">)</button><button class="light" onclick="insert('%')">%</button><button class="light" onclick="insert('mod')">mod</button><button class="light" onclick="insert('°')">°</button>
+<div class="sep"></div>
+<button class="num" onclick="insert('7')">7</button><button class="num" onclick="insert('8')">8</button><button class="num" onclick="insert('9')">9</button><button class="op" onclick="insert('÷')">÷</button><button class="pink" onclick="back()">⌫</button>
+<button class="num" onclick="insert('4')">4</button><button class="num" onclick="insert('5')">5</button><button class="num" onclick="insert('6')">6</button><button class="op" onclick="insert('×')">×</button><button class="ac" onclick="clearAll()">AC</button>
+<button class="num" onclick="insert('1')">1</button><button class="num" onclick="insert('2')">2</button><button class="num" onclick="insert('3')">3</button><button class="op" onclick="insert('−')">−</button><button class="light" onclick="useAns()">Ans</button>
+<button class="num" onclick="insert('0')">0</button><button class="num" onclick="insert('.')">.</button><button class="num" onclick="neg()">±</button><button class="op" onclick="insert('+')">+</button><button class="equals" onclick="calculate()">=</button>
+</div></div></div>
+<script>
+let expr='', ans=0, memory=0, isDeg=true, isHyp=false;
+function update(){{document.getElementById('history').innerText=expr;document.getElementById('result').innerText=expr||'0';}}
+function insert(v){{expr+=v;update();}}function doRandom(){{expr+=Math.random().toFixed(5);update();}}
+function clearAll(){{expr='';document.getElementById('result').innerText='0';document.getElementById('history').innerText='';}}
+function back(){{expr=expr.slice(0,-1);update();}}function useAns(){{expr+=ans;update();}}
+function neg(){{if(expr.startsWith('-'))expr=expr.slice(1);else expr='-'+expr;update();}}
+function toggleDeg(){{isDeg=!isDeg}}function toggleHyp(){{isHyp=!isHyp}}
+function mem(k){{if(k==='MC')memory=0;if(k==='MS'){{let v=safeEval(expr);if(v!=null)memory=v;}}if(k==='MR'){{expr+=memory;update();}}if(k==='M+'){{let v=safeEval(expr);if(v!=null)memory+=v;}}if(k==='M-'){{let v=safeEval(expr);if(v!=null)memory-=v;}}}}
+function toRad(x){{return isDeg?x*Math.PI/180:x;}}function factorial(n){{n=Math.floor(Number(n));if(n<0||isNaN(n))return NaN;if(n===0)return 1;let r=1;for(let i=2;i<=n;i++)r*=i;return r;}}
+function nPr(n,r){{return factorial(n)/factorial(n-r);}}function nCr(n,r){{return factorial(n)/(factorial(r)*factorial(n-r));}}
+function safeEval(s){{try{{if(!s||s.trim()==='')return null;let t=s.replace(/π/g,'Math.PI').replace(/E/g,'Math.E').replace(/÷/g,'/').replace(/×/g,'*').replace(/−/g,'-').replace(/\\^/g,'**').replace(/mod/g,'%');t=t.replace(/(\\d+(\\.\\d+)?)P(\\d+)/g,'nPr($1,$3)');t=t.replace(/(\\d+(\\.\\d+)?)C(\\d+)/g,'nCr($1,$3)');t=t.replace(/(\\d+(\\.\\d+)?)%/g,'($1/100)');t=t.replace(/sqrt\\(/g,'Math.sqrt(');t=t.replace(/ln\\(/g,'Math.log(');t=t.replace(/log\\(/g,'Math.log10(');t=t.replace(/sin\\(/g,'__sin(');t=t.replace(/cos\\(/g,'__cos(');t=t.replace(/tan\\(/g,'__tan(');function __sin(x){{return isHyp?Math.sinh(toRad(x)):Math.sin(toRad(x));}}function __cos(x){{return isHyp?Math.cosh(toRad(x)):Math.cos(toRad(x));}}function __tan(x){{return isHyp?Math.tanh(toRad(x)):Math.tan(toRad(x));}}return Function('nPr','nCr','factorial','Math','__sin','__cos','__tan','return '+t)(nPr,nCr,factorial,Math,__sin,__cos,__tan);}}catch(e){{return null;}}}}
+function handleSci(f){{let curr=expr.trim();let val=safeEval(curr);if(val!=null&&curr!==''&&!isNaN(val)&&!/[+\\-×÷^%()P C]$/.test(curr)){{let res=val;if(f==='sin')res=isHyp?Math.sinh(toRad(val)):Math.sin(toRad(val));if(f==='cos')res=isHyp?Math.cosh(toRad(val)):Math.cos(toRad(val));if(f==='tan')res=isHyp?Math.tanh(toRad(val)):Math.tan(toRad(val));if(f==='ln')res=Math.log(val);if(f==='log')res=Math.log10(val);if(f==='sqrt')res=Math.sqrt(val);if(f==='cube')res=Math.pow(val,3);if(f==='inv')res=1/val;if(f==='fact')res=factorial(val);res=Number(Number(res).toFixed(10));document.getElementById('history').innerText=curr+' '+f+' =';expr=String(res);ans=res;document.getElementById('result').innerText=res;return;}}if(f==='sin'||f==='cos'||f==='tan'||f==='ln'||f==='log'||f==='sqrt'){{expr+=f+'(';update();}}else if(f==='cube'){{expr+='^3';update();}}else if(f==='inv'){{expr='1/('+curr+')';update();}}else if(f==='fact'){{let r=factorial(val||0);expr=String(r);update();}}}}
+function calculate(){{let r=safeEval(expr);if(r!=null&&!isNaN(r)){{ans=r;r=Number(Number(r).toFixed(10));expr=String(r);document.getElementById('result').innerText=r;document.getElementById('history').innerText='';}}else{{document.getElementById('result').innerText='Error';}}}}
+</script></body></html>
+"""
 
-    if not raw_expr.strip():
-      return
-
-    processed_expr = re.sub(r"(\d)([a-zA-Z\(])", r"\1*\2", raw_expr)
-
-    eval_str = (
-        processed_expr.replace("^", "**")
-        .replace("×", "*")
-        .replace("÷", "/")
-        .replace("%", "/100")
-    )
-
-    open_brackets = eval_str.count("(")
-    close_brackets = eval_str.count(")")
-    if open_brackets > close_brackets:
-      eval_str += ")" * (open_brackets - close_brackets)
-
-    res = eval(eval_str, {"__builtins__": {}}, allowed_names)
-
-    if isinstance(res, float):
-      res = round(res, 10)
-
-    full_expr = raw_expr + " = " + str(res)
-    st.session_state.last_expr = raw_expr + " ="
-    st.session_state.result = str(res)
-    st.session_state.history_log.append(full_expr)
-    st.session_state.expression = str(res)
-  except ZeroDivisionError:
-    st.session_state.last_expr = st.session_state.expression + " ="
-    st.session_state.result = "Math Error"
-    st.session_state.expression = ""
-  except ValueError:
-    st.session_state.last_expr = st.session_state.expression + " ="
-    st.session_state.result = "Math Error"
-    st.session_state.expression = ""
-  except Exception:
-    st.session_state.last_expr = st.session_state.expression + " ="
-    st.session_state.result = "Syntax Error"
-    st.session_state.expression = ""
-
-
-def handle_click(val):
-  if val == "C":
-    st.session_state.expression = ""
-    st.session_state.last_expr = ""
-    st.session_state.result = "0"
-  elif val == "⌫":
-    st.session_state.expression = st.session_state.expression[:-1]
-  elif val == "=":
-    evaluate_calc()
-  elif val == "±":
-    if st.session_state.expression.startswith("-"):
-      st.session_state.expression = st.session_state.expression[1:]
-    else:
-      st.session_state.expression = "-" + st.session_state.expression
-  else:
-    if st.session_state.result in ["Math Error", "Syntax Error"]:
-      st.session_state.expression = ""
-      st.session_state.result = "0"
-    st.session_state.expression += str(val)
-
-
-# --- UI Layout ---
-st.markdown(
-    '<div class="app-header">✨ PRO SCIENTIFIC CALCULATOR</div>',
-    unsafe_allow_html=True,
-)
-
-# Screen Display
-history_display = (
-    st.session_state.last_expr if st.session_state.last_expr else ""
-)
-main_display = (
-    st.session_state.result
-    if st.session_state.expression == ""
-    else st.session_state.expression
-)
-
-st.markdown(
-    f"""
-    <div class="calc-screen">
-        <div class="history-text">{history_display}</div>
-        <div class="main-result">{main_display}</div>
-    </div>
-""",
-    unsafe_allow_html=True,
-)
-
-# Scientific Mode Panel
-if mode == "Scientific":
-  sc1, sc2, sc3, sc4 = st.columns(4)
-  with sc1:
-    if st.button("sin("):
-      handle_click("sin(")
-      st.rerun()
-  with sc2:
-    if st.button("cos("):
-      handle_click("cos(")
-      st.rerun()
-  with sc3:
-    if st.button("tan("):
-      handle_click("tan(")
-      st.rerun()
-  with sc4:
-    if st.button("sqrt("):
-      handle_click("sqrt(")
-      st.rerun()
-
-  sc5, sc6, sc7, sc8 = st.columns(4)
-  with sc5:
-    if st.button("log("):
-      handle_click("log(")
-      st.rerun()
-  with sc6:
-    if st.button("ln("):
-      handle_click("ln(")
-      st.rerun()
-  with sc7:
-    if st.button("^"):
-      handle_click("^")
-      st.rerun()
-  with sc8:
-    if st.button("n!"):
-      handle_click("factorial(")
-      st.rerun()
-
-  sc9, sc10, sc11, sc12 = st.columns(4)
-  with sc9:
-    if st.button("π"):
-      handle_click("pi")
-      st.rerun()
-  with sc10:
-    if st.button("e"):
-      handle_click("e")
-      st.rerun()
-  with sc11:
-    if st.button("("):
-      handle_click("(")
-      st.rerun()
-  with sc12:
-    if st.button(")"):
-      handle_click(")")
-      st.rerun()
-
-# Main Calculator Button Grid
-col1, col2, col3, col4 = st.columns(4)
-
-# Row 1
-with col1:
-  if st.button("C"):
-    handle_click("C")
-    st.rerun()
+# Center me dikhane ke liye columns
+col1, col2, col3 = st.columns([1,2,1])
 with col2:
-  if st.button("⌫"):
-    handle_click("⌫")
-    st.rerun()
-with col3:
-  if st.button("%"):
-    handle_click("%")
-    st.rerun()
-with col4:
-  if st.button("÷"):
-    handle_click("÷")
-    st.rerun()
-
-# Row 2
-with col1:
-  if st.button("7"):
-    handle_click("7")
-    st.rerun()
-with col2:
-  if st.button("8"):
-    handle_click("8")
-    st.rerun()
-with col3:
-  if st.button("9"):
-    handle_click("9")
-    st.rerun()
-with col4:
-  if st.button("×"):
-    handle_click("×")
-    st.rerun()
-
-# Row 3
-with col1:
-  if st.button("4"):
-    handle_click("4")
-    st.rerun()
-with col2:
-  if st.button("5"):
-    handle_click("5")
-    st.rerun()
-with col3:
-  if st.button("6"):
-    handle_click("6")
-    st.rerun()
-with col4:
-  if st.button("-"):
-    handle_click("-")
-    st.rerun()
-
-# Row 4
-with col1:
-  if st.button("1"):
-    handle_click("1")
-    st.rerun()
-with col2:
-  if st.button("2"):
-    handle_click("2")
-    st.rerun()
-with col3:
-  if st.button("3"):
-    handle_click("3")
-    st.rerun()
-with col4:
-  if st.button("+"):
-    handle_click("+")
-    st.rerun()
-
-# Row 5
-with col1:
-  if st.button("±"):
-    handle_click("±")
-    st.rerun()
-with col2:
-  if st.button("0"):
-    handle_click("0")
-    st.rerun()
-with col3:
-  if st.button("."):
-    handle_click(".")
-    st.rerun()
-with col4:
-  if st.button("="):
-    evaluate_calc()
-    st.rerun()
+    components.html(html_code, height=1100, scrolling=False)
