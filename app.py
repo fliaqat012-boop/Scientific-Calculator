@@ -14,7 +14,7 @@ with mid_col:
         c1, c2 = st.columns(2)
         with c1: color_choice = st.selectbox("🎨 Theme", list(THEMES.keys()))
         with c2: mode_choice = st.radio("🌓 Mode", ["Light Mode ☀️", "Dark Mode 🌙"])
-t = THEMES[color_choice]; is_dark = "Dark" in mode_choice; bg_color = t['bg_dark'] if is_dark else t['bg_light']
+t = THEMES[color_choice]; is_dark = "Dark" in mode_choice; bg_color = t['bg_dark'] if is_dark else t['bg_light']; text_color = "Black"
 st.markdown(f"<style>.stApp{{background:{bg_color} !important}} header,footer{{visibility:hidden}} div[data-testid='stVerticalBlockBorderWrapper']{{background:rgba(255,255,255,0.85);border-radius:20px;max-width:480px;margin:0 auto 15px auto;}} iframe{{width:100% !important}}</style>", unsafe_allow_html=True)
 html_code = f"""
 <html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">
