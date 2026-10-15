@@ -157,8 +157,41 @@ function mem(k){
   else if(k==='M-'){let v=safeEval(expr); if(v!=null) memory-=v;}
   else if(k==='MS'){let v=safeEval(expr); if(v!=null) memory=v;}
 }
+// === DIRECT KEYBOARD - AUTO FOCUS FIX ===
+function focusCalc() {
+    window.focus();
+    document.body.focus();
+    document.body.tabIndex = 0;
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key >= '0' && e.key <= '9') { insert(e.key); return; }
+    if (e.key === '.') { insert('.'); return; }
+    if (e.key === '+') { insert('+'); return; }
+    if (e.key === '(' || e.key === ')') { insert(e.key); return; }
+    if (e.key === '%') { insert('%'); return; }
+    if (e.key === '/') { e.preventDefault(); insert('÷'); return; }
+    if (e.key === '*') { e.preventDefault(); insert('×'); return; }
+    if (e.key === '-') { insert('−'); return; }
+    if (e.key === '^') { insert('^'); return; }
+    if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); calculate(); return; }
+    if (e.key === 'Backspace') { e.preventDefault(); back(); return; }
+    if (e.key === 'Escape' || e.key.toLowerCase() === 'c') { clearAll(); return; }
+});
+
+// Page khulte hi focus le lo
+window.addEventListener('load', focusCalc);
+setTimeout(focusCalc, 100);
+setTimeout(focusCalc, 500);
+
+// Jab bhi focus hate, wapas le lo
+document.addEventListener('click', focusCalc);
+window.addEventListener('blur', function(){ setTimeout(focusCalc, 10); });
 </script></body></html>
 """
 
 html_code = HTML_TEMPLATE.replace("__BODY__", t['body']).replace("__EAR__", t['ear']).replace("__BORDER__", t['border']).replace("__LIGHT__", t['light'])
 components.html(html_code, height=850, scrolling=False)
+
+# Auto focus the iframe from outside
+components.html("<script>setTimeout(function(){window.parent.document.querySelectorAll('iframe').forEach(f=>f.focus());}, 300);</script>", height=0)
