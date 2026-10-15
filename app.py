@@ -22,8 +22,7 @@ text_color = "white" if is_dark else "black"
 
 # TITLE - AB BLACK HOGA, WHITE NAHI
 st.markdown(f"""
-<h1 style='text-align:center; font-weight:900; color:{text_color} !important; margin-bottom:10px;'>
-🧮 FATIMA LIAQAT
+<h1 style='text-align:center; font-weight:900; color:{ text_color} !important; margin-bottom:10px;'> FATIMA LIAQAT
 </h1>
 """, unsafe_allow_html=True)
 
