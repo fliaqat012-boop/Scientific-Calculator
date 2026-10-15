@@ -22,7 +22,7 @@ is_dark = "Dark" in mode_choice
 bg_color = t['bg_dark'] if is_dark else t['bg_light']
 text_color = "white" if is_dark else "black"
 
-st.markdown(f"<h1 style='text-align:center; font-weight:900; color:{text_color} !important; -webkit-text-fill-color:{text_color} !important;'>🧮 FATIMA LIAQAT</h1>", unsafe_allow_html=True)
+st.markdown(f"<h1 style='text-align:center; font-weight:900; color:{text_color} !important; -webkit-text-fill-color:{text_color} !important;'> FATIMA LIAQAT</h1>", unsafe_allow_html=True)
 
 st.markdown(f"""
 <style>
