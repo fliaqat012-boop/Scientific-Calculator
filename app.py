@@ -7,7 +7,7 @@ THEMES = {
     "Lavender": {"body": "#cbb6ff", "ear": "#a48bff", "border": "#8a5cff", "bg_light": "#ede7ff", "bg_dark": "#211a2e", "light": "#e5d3ff"},
     "Mint Green": {"body": "#b9f6ca", "ear": "#81e6a0", "border": "#4caf7a", "bg_light": "#e8f5e9", "bg_dark": "#1a2e20", "light": "#dcedc8"},
 }
-st.markdown("<h1 style='text-align:center; font-family:Poppins; font-weight:900; margin-bottom:15px;'>🧮 Scientific Calculator</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center; font-family:Poppins; font-weight:900; margin-bottom:15px;'>🧮 FATIMA LIAQAT</h1>", unsafe_allow_html=True)
 _, mid_col, _ = st.columns([0.5, 3, 0.5])
 with mid_col:
     with st.container(border=True):
