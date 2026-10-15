@@ -2,7 +2,6 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(page_title="FATIMA LIAQAT Calculator", layout="centered")
-st.markdown('<div id="top"></div>', unsafe_allow_html=True)
 
 THEMES = {
     "Original Blue": {"body": "#a8bdff", "ear": "#8aa8ff", "border": "#6d8cff", "bg_light": "#e6ecff", "bg_dark": "#1a1d2e", "light": "#d6e6ff"},
@@ -21,13 +20,14 @@ is_dark = "Dark" in st.session_state['mode_selector']
 bg_color = t['bg_dark'] if is_dark else t['bg_light']
 text_color = "white" if is_dark else "black"
 
-st.markdown(f"<h1 style='text-align:center; font-weight:900; color:{text_color} !important; -webkit-text-fill-color:{text_color} !important;'>🧮 FATIMA LIAQAT</h1>", unsafe_allow_html=True)
+st.markdown(f"<h1 style='text-align:center; font-weight:900; color:{text_color} !important; -webkit-text-fill-color:{text_color} !important;'> FATIMA LIAQAT</h1>", unsafe_allow_html=True)
 
 st.markdown(f"""
 <style>
-html, body {{ scroll-behavior: auto !important; }}
-.stApp{{background:{bg_color} !important; overflow-anchor: none !important;}}
+.stApp{{background:{bg_color} !important;}}
 header,footer{{visibility:hidden}}
+* {{ scroll-behavior: auto !important; }}
+html, body, [data-testid="stVerticalBlock"] {{ overflow-anchor: none !important; }}
 h1, label, p {{ color:{text_color} !important; -webkit-text-fill-color:{text_color} !important; }}
 div[data-testid='stWidgetLabel'] label {{ color:{text_color} !important; font-weight:800 !important; }}
 [data-testid="stVerticalBlockBorderWrapper"]{{background: rgba(255,255,255,0.95) !important; border: 2px solid {t['border']} !important; border-radius: 15px !important;}}
@@ -42,14 +42,6 @@ with mid_col:
             st.selectbox("🎨 Theme", list(THEMES.keys()), key='theme_selector')
         with c2:
             st.radio("🌓 Mode", ["Light Mode ☀️", "Dark Mode 🌙"], key='mode_selector')
-
-# MOBILE FIX - Screen upar hi rahegi
-components.html("""
-<script>
-    const goTop = () => { try { window.parent.window.scrollTo({top:0, left:0, behavior:'instant'}); } catch(e){} };
-    goTop(); setTimeout(goTop, 80); setTimeout(goTop, 300); setTimeout(goTop, 700);
-</script>
-""", height=0)
 
 HTML_TEMPLATE = """
 <html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -84,7 +76,7 @@ button{border:none;border-radius:18px;padding:14px 3px;font-size:13px;font-weigh
 <script>
 let expr='', ans=0, memory=0, isDeg=true, isHyp=false, isShift=false;
 function update(){document.getElementById('history').innerText=expr;document.getElementById('result').innerText=expr||'0';}
-function insert(v){expr+=v;update();focusCalc();}
+function insert(v){expr+=v;update();}
 function doRandom(){expr+=Math.random().toFixed(5);update();}
 function clearAll(){expr='';document.getElementById('result').innerText='0';document.getElementById('history').innerText='';}
 function back(){expr=expr.slice(0,-1);update();}
@@ -167,7 +159,6 @@ function mem(k){
   else if(k==='M-'){let v=safeEval(expr); if(v!=null) memory-=v;}
   else if(k==='MS'){let v=safeEval(expr); if(v!=null) memory=v;}
 }
-function focusCalc(){ window.focus(); document.body.focus(); }
 document.addEventListener('keydown', function(e) {
     if (e.key >= '0' && e.key <= '9') { insert(e.key); return; }
     if (e.key === '.') { insert('.'); return; }
@@ -182,11 +173,8 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Backspace') { e.preventDefault(); back(); return; }
     if (e.key === 'Escape' || e.key.toLowerCase() === 'c') { clearAll(); return; }
 });
-window.addEventListener('load', function(){ focusCalc(); setTimeout(focusCalc, 200); setTimeout(focusCalc, 600); });
-document.addEventListener('click', focusCalc);
 </script></body></html>
 """
 
 html_code = HTML_TEMPLATE.replace("__BODY__", t['body']).replace("__EAR__", t['ear']).replace("__BORDER__", t['border']).replace("__LIGHT__", t['light'])
 components.html(html_code, height=850, scrolling=False)
-components.html("<script>setTimeout(function(){try{window.parent.document.querySelectorAll('iframe').forEach(f=>{try{f.focus();}catch(e){}});}catch(e){}}, 500);</script>", height=0)
