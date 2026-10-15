@@ -2,6 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(page_title="FATIMA LIAQAT Calculator", layout="centered")
+st.markdown('<div id="top"></div>', unsafe_allow_html=True)
 
 THEMES = {
     "Original Blue": {"body": "#a8bdff", "ear": "#8aa8ff", "border": "#6d8cff", "bg_light": "#e6ecff", "bg_dark": "#1a1d2e", "light": "#d6e6ff"},
@@ -15,20 +16,19 @@ if 'theme_selector' not in st.session_state:
 if 'mode_selector' not in st.session_state:
     st.session_state['mode_selector'] = 'Light Mode ☀️'
 
-color_choice = st.session_state['theme_selector']
-mode_choice = st.session_state['mode_selector']
-t = THEMES[color_choice]
-is_dark = "Dark" in mode_choice
+t = THEMES[st.session_state['theme_selector']]
+is_dark = "Dark" in st.session_state['mode_selector']
 bg_color = t['bg_dark'] if is_dark else t['bg_light']
 text_color = "white" if is_dark else "black"
 
-st.markdown(f"<h1 style='text-align:center; font-weight:900; color:{text_color} !important; -webkit-text-fill-color:{text_color} !important;'> FATIMA LIAQAT</h1>", unsafe_allow_html=True)
+st.markdown(f"<h1 style='text-align:center; font-weight:900; color:{text_color} !important; -webkit-text-fill-color:{text_color} !important;'>🧮 FATIMA LIAQAT</h1>", unsafe_allow_html=True)
 
 st.markdown(f"""
 <style>
-.stApp{{background:{bg_color} !important}}
+html, body {{ scroll-behavior: auto !important; }}
+.stApp{{background:{bg_color} !important; overflow-anchor: none !important;}}
 header,footer{{visibility:hidden}}
-h1, label {{ color:{text_color} !important; -webkit-text-fill-color:{text_color} !important; }}
+h1, label, p {{ color:{text_color} !important; -webkit-text-fill-color:{text_color} !important; }}
 div[data-testid='stWidgetLabel'] label {{ color:{text_color} !important; font-weight:800 !important; }}
 [data-testid="stVerticalBlockBorderWrapper"]{{background: rgba(255,255,255,0.95) !important; border: 2px solid {t['border']} !important; border-radius: 15px !important;}}
 </style>
@@ -43,10 +43,18 @@ with mid_col:
         with c2:
             st.radio("🌓 Mode", ["Light Mode ☀️", "Dark Mode 🌙"], key='mode_selector')
 
+# MOBILE FIX - Screen upar hi rahegi
+components.html("""
+<script>
+    const goTop = () => { try { window.parent.window.scrollTo({top:0, left:0, behavior:'instant'}); } catch(e){} };
+    goTop(); setTimeout(goTop, 80); setTimeout(goTop, 300); setTimeout(goTop, 700);
+</script>
+""", height=0)
+
 HTML_TEMPLATE = """
 <html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body{margin:0;display:flex;justify-content:center;background:transparent;font-family:'Segoe UI',sans-serif;}
+body{margin:0;display:flex;justify-content:center;background:transparent;font-family:'Segoe UI',sans-serif; outline:none;}
 .wrap{position:relative;padding-top:35px; width:100%; max-width:400px; display:flex; justify-content:center; margin:0 auto;}
 .ears::before,.ears::after{content:'';position:absolute;top:0;width:68px;height:60px;background:__EAR__;border-radius:70% 70% 20% 20%;z-index:0;border:4px solid white}
 .ears::before{left:22px;transform:rotate(-12deg)}.ears::after{right:22px;transform:rotate(12deg)}
@@ -57,7 +65,7 @@ body{margin:0;display:flex;justify-content:center;background:transparent;font-fa
 button{border:none;border-radius:18px;padding:14px 3px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.15);color:#3b4a8a;}
 .mem{background:#c9f0d8}.func-y{background:#fde9a0}.func-b{background:__LIGHT__}.light{background:#e3f2fd}.num{background:#fff}.op{background:__BORDER__;color:white}.pink{background:#ff8a9d;color:white}.ac{background:#ff7a8e;color:white}.equals{background:__BORDER__;color:white}
 .sep{border-top:3px dotted white;margin:8px 0;grid-column:1 / -1}
-</style></head><body>
+</style></head><body tabindex="0">
 <div class="wrap"><div class="ears"></div><div class="calculator">
 <div class="display"><small id="degLabel" style="float:left;background:__LIGHT__;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:bold">DEG</small><div id="history"></div><div id="result">0</div></div>
 <div class="grid">
@@ -76,9 +84,11 @@ button{border:none;border-radius:18px;padding:14px 3px;font-size:13px;font-weigh
 <script>
 let expr='', ans=0, memory=0, isDeg=true, isHyp=false, isShift=false;
 function update(){document.getElementById('history').innerText=expr;document.getElementById('result').innerText=expr||'0';}
-function insert(v){expr+=v;update();}function doRandom(){expr+=Math.random().toFixed(5);update();}
+function insert(v){expr+=v;update();focusCalc();}
+function doRandom(){expr+=Math.random().toFixed(5);update();}
 function clearAll(){expr='';document.getElementById('result').innerText='0';document.getElementById('history').innerText='';}
-function back(){expr=expr.slice(0,-1);update();}function useAns(){expr+=ans;update();}
+function back(){expr=expr.slice(0,-1);update();}
+function useAns(){expr+=ans;update();}
 function neg(){if(expr.startsWith('-'))expr=expr.slice(1);else expr='-'+expr;update();}
 function toggleDeg(){isDeg=!isDeg; document.getElementById('degLabel').innerText = isDeg?'DEG':'RAD';}
 function toggleHyp(){isHyp=!isHyp;}
@@ -157,13 +167,7 @@ function mem(k){
   else if(k==='M-'){let v=safeEval(expr); if(v!=null) memory-=v;}
   else if(k==='MS'){let v=safeEval(expr); if(v!=null) memory=v;}
 }
-// === DIRECT KEYBOARD - AUTO FOCUS FIX ===
-function focusCalc() {
-    window.focus();
-    document.body.focus();
-    document.body.tabIndex = 0;
-}
-
+function focusCalc(){ window.focus(); document.body.focus(); }
 document.addEventListener('keydown', function(e) {
     if (e.key >= '0' && e.key <= '9') { insert(e.key); return; }
     if (e.key === '.') { insert('.'); return; }
@@ -178,20 +182,11 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Backspace') { e.preventDefault(); back(); return; }
     if (e.key === 'Escape' || e.key.toLowerCase() === 'c') { clearAll(); return; }
 });
-
-// Page khulte hi focus le lo
-window.addEventListener('load', focusCalc);
-setTimeout(focusCalc, 100);
-setTimeout(focusCalc, 500);
-
-// Jab bhi focus hate, wapas le lo
+window.addEventListener('load', function(){ focusCalc(); setTimeout(focusCalc, 200); setTimeout(focusCalc, 600); });
 document.addEventListener('click', focusCalc);
-window.addEventListener('blur', function(){ setTimeout(focusCalc, 10); });
 </script></body></html>
 """
 
 html_code = HTML_TEMPLATE.replace("__BODY__", t['body']).replace("__EAR__", t['ear']).replace("__BORDER__", t['border']).replace("__LIGHT__", t['light'])
 components.html(html_code, height=850, scrolling=False)
-
-# Auto focus the iframe from outside
-components.html("<script>setTimeout(function(){window.parent.document.querySelectorAll('iframe').forEach(f=>f.focus());}, 300);</script>", height=0)
+components.html("<script>setTimeout(function(){try{window.parent.document.querySelectorAll('iframe').forEach(f=>{try{f.focus();}catch(e){}});}catch(e){}}, 500);</script>", height=0)
